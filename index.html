@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Otimização de Fluxo em Redes Urbanas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 380px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 24px;
+            border-bottom: 3px solid #1d4ed8;
+        }
+
+        .header-section h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header-section p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .content-section {
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94a3b8;
+            margin: 24px 0 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 3px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 16px;
+            margin: 6px 0;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .mode-btn {
+            padding: 10px 14px;
+            font-size: 0.85rem;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        }
+
+        .danger-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .danger-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .success-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .success-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .canvas-header {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .canvas-header h2 {
+            font-size: 1.3rem;
+            color: #1e293b;
+            font-weight: 700;
+        }
+
+        canvas {
+            border: none;
+            background: white;
+            cursor: crosshair;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+
+        #results, #steps {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+            backdrop-filter: blur(10px);
+        }
+
+        #results h3, #steps h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        #results p, #steps p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 6px 0;
+            color: #e2e8f0;
+        }
+
+        #results h4 {
+            font-size: 0.95rem;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            color: #93c5fd;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .info-box h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .info-box p {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #cbd5e1;
+            margin: 4px 0;
+        }
+
+        .legend {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .legend h4 {
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .legend-line {
+            width: 40px;
+            height: 3px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .icon {
+            font-size: 1.1rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-ready { background: #10b981; }
+        .status-processing { background: #f59e0b; }
+        .status-complete { background: #3b82f6; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .example-btn {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            font-size: 0.85rem;
+            padding: 10px;
+        }
+
+        .example-btn:hover {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div class="header-section">
+            <h1>🚦 Sistema de Otimização de Fluxo</h1>
+            <p>Análise e otimização de redes de transporte urbano, distribuição de recursos e infraestrutura crítica</p>
+        </div>
+        
+        <div class="content-section">
+            <div class="info-box">
+                <h3>💡 Sobre o Sistema</h3>
+                <p><strong>Fluxo Máximo:</strong> Determina a capacidade máxima de transferência entre dois pontos em uma rede.</p>
+                <p><strong>Aplicações Reais:</strong> Tráfego urbano, redes elétricas, distribuição de água, logística e telecomunicações.</p>
+                <p><strong>Algoritmo:</strong> Ford-Fulkerson com busca de caminhos aumentantes (BFS).</p>
+            </div>
+
+            <div class="section-title">⚙️ Ferramentas de Edição</div>
+            <div class="button-group">
+                <button class="mode-btn active" onclick="setMode('add-node')">
+                    <span class="icon">➕</span> Nó
+                </button>
+                <button class="mode-btn" onclick="setMode('add-edge')">
+                    <span class="icon">🔗</span> Via
+                </button>
+                <button class="mode-btn" onclick="setMode('move')">
+                    <span class="icon">↔️</span> Mover
+                </button>
+            </div>
+
+            <div class="section-title">🎯 Configurar Rede</div>
+            <button class="action-btn" onclick="setNodeType('source')">
+                <span class="icon">🟢</span> Definir Origem
+            </button>
+            <button class="action-btn" onclick="setNodeType('target')">
+                <span class="icon">🔴</span> Definir Destino
+            </button>
+
+            <div class="section-title">🗑️ Remover Elementos</div>
+            <button class="danger-btn" onclick="removeSelectedNode()">
+                <span class="icon">❌</span> Remover Nó Selecionado
+            </button>
+            <button class="danger-btn" onclick="removeSelectedEdge()">
+                <span class="icon">✂️</span> Remover Via Selecionada
+            </button>
+
+            <div class="section-title">🚀 Executar Análise</div>
+            <button class="success-btn" onclick="runFordFulkerson()">
+                <span class="icon">⚡</span> Calcular Fluxo Máximo
+            </button>
+            <button class="success-btn" onclick="stepFordFulkerson()">
+                <span class="icon">▶️</span> Próxima Iteração
+            </button>
+
+            <div id="results"></div>
+            <div id="steps"></div>
+
+            <div class="section-title">🔄 Controles</div>
+            <button onclick="resetAlgorithm()">
+                <span class="icon">🔄</span> Resetar Algoritmo
+            </button>
+            <button onclick="resetGraph()">
+                <span class="icon">♻️</span> Resetar Fluxos
+            </button>
+            <button class="danger-btn" onclick="clearAll()">
+                <span class="icon">🗑️</span> Limpar Tudo
+            </button>
+
+            <div class="section-title">📊 Exemplos Práticos</div>
+            <div class="example-grid">
+                <button class="example-btn" onclick="loadExample(1)">
+                    <span class="icon">🏙️</span> Rede Urbana
+                </button>
+                <button class="example-btn" onclick="loadExample(2)">
+                    <span class="icon">🚦</span> Tráfego Simples
+                </button>
+                <button class="example-btn" onclick="loadExample(3)">
+                    <span class="icon">🛣️</span> Rodovias
+                </button>
+                <button class="example-btn" onclick="loadExample(4)">
+                    <span class="icon">🔀</span> Fluxo Complexo
+                </button>
+            </div>
+
+            <div class="legend">
+                <h4>Legendas</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #22c55e;"></div>
+                    <span>Ponto de Origem</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f59e0b;"></div>
+                    <span>Ponto de Destino</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3b82f6;"></div>
+                    <span>Nó Intermediário</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: #6b7280;"></div>
+                    <span>Via sem fluxo</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: #3b82f6;"></div>
+                    <span>Via com fluxo ativo</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: #ef4444;"></div>
+                    <span>Via saturada (máxima)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: #ef4444; border: 2px dashed #ef4444; height: 0;"></div>
+                    <span>Corte mínimo</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="canvas-container">
+        <div class="canvas-header">
+            <h2>Visualização da Rede de Transporte</h2>
+        </div>
+        <canvas id="graph-canvas" width="1200" height="700"></canvas>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('graph-canvas');
+        const ctx = canvas.getContext('2d');
+        const NODE_RADIUS = 35;
+        
+        let nodes = [];
+        let edges = [];
+        let selectedNode = null;
+        let sourceNode = null;
+        let targetNode = null;
+        let draggedNode = null;
+        let mode = 'add-node';
+        let maxFlow = 0;
+        let augmentingPaths = [];
+        let minCut = null;
+        let stepsLog = [];
+        let algorithmState = null;
+        
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Desenhar arestas
+            edges.forEach(edge => {
+                const from = nodes.find(n => n.id === edge.from);
+                const to = nodes.find(n => n.id === edge.to);
+                if (!from || !to) return;
+                
+                const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                const absFlow = Math.abs(edge.flow);
+                const ratio = absFlow / edge.capacity;
+                
+                // Linha principal
+                ctx.beginPath();
+                ctx.moveTo(from.x, from.y);
+                ctx.lineTo(to.x, to.y);
+                ctx.strokeStyle = ratio >= 1 ? '#ef4444' : absFlow > 0 ? '#3b82f6' : '#94a3b8';
+                ctx.lineWidth = ratio >= 1 ? 5 : absFlow > 0 ? 4 : 3;
+                ctx.stroke();
+                
+                // Seta
+                let endX = to.x - NODE_RADIUS * Math.cos(angle);
+                let endY = to.y - NODE_RADIUS * Math.sin(angle);
+                if (edge.flow < 0) {
+                    endX = from.x + NODE_RADIUS * Math.cos(angle);
+                    endY = from.y + NODE_RADIUS * Math.sin(angle);
+                    angle += Math.PI;
+                }
+                const arrowSize = 15;
+                ctx.beginPath();
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - arrowSize * Math.cos(angle - Math.PI/6), endY - arrowSize * Math.sin(angle - Math.PI/6));
+                ctx.moveTo(endX, endY);
+                ctx.lineTo(endX - arrowSize * Math.cos(angle + Math.PI/6), endY - arrowSize * Math.sin(angle + Math.PI/6));
+                ctx.strokeStyle = ratio >= 1 ? '#ef4444' : absFlow > 0 ? '#3b82f6' : '#94a3b8';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Label com fundo
+                const midX = (from.x + to.x)/2;
+                const midY = (from.y + to.y)/2;
+                
+                ctx.fillStyle = ratio >= 1 ? '#fef2f2' : absFlow > 0 ? '#eff6ff' : 'white';
+                ctx.strokeStyle = ratio >= 1 ? '#ef4444' : absFlow > 0 ? '#3b82f6' : '#cbd5e1';
+                ctx.lineWidth = 2;
+                const boxWidth = 70;
+                const boxHeight = edge.flow < 0 ? 40 : 30;
+                ctx.beginPath();
+                ctx.roundRect(midX - boxWidth/2, midY - boxHeight/2, boxWidth, boxHeight, 6);
+                ctx.fill();
+                ctx.stroke();
+                
+                ctx.fillStyle = ratio >= 1 ? '#dc2626' : absFlow > 0 ? '#2563eb' : '#475569';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${absFlow}/${edge.capacity}`, midX, midY - (edge.flow < 0 ? 5 : 0));
+                if (edge.flow < 0) {
+                    ctx.font = '11px Arial';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText('(reverso)', midX, midY + 10);
+                }
+            });
+            
+            // Corte mínimo
+            if (minCut) {
+                ctx.save();
+                ctx.setLineDash([15, 10]);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 4;
+                edges.filter(e => minCut.S.includes(e.from) && minCut.T.includes(e.to)).forEach(edge => {
+                    const from = nodes.find(n => n.id === edge.from);
+                    const to = nodes.find(n => n.id === edge.to);
+                    if (from && to) {
+                        ctx.beginPath();
+                        ctx.moveTo(from.x, from.y);
+                        ctx.lineTo(to.x, to.y);
+                        ctx.stroke();
+                    }
+                });
+                ctx.restore();
+            }
+            
+            // Nós
+            nodes.forEach(node => {
+                // Sombra
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 4;
+                
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, NODE_RADIUS, 0, Math.PI*2);
+                
+                // Gradiente
+                const gradient = ctx.createRadialGradient(node.x - 10, node.y - 10, 5, node.x, node.y, NODE_RADIUS);
+                if (node.id === sourceNode) {
+                    gradient.addColorStop(0, '#4ade80');
+                    gradient.addColorStop(1, '#22c55e');
+                } else if (node.id === targetNode) {
+                    gradient.addColorStop(0, '#fbbf24');
+                    gradient.addColorStop(1, '#f59e0b');
+                } else {
+                    gradient.addColorStop(0, '#60a5fa');
+                    gradient.addColorStop(1, '#3b82f6');
+                }
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                
+                ctx.shadowColor = 'transparent';
+                ctx.strokeStyle = node.id === selectedNode ? '#fbbf24' : '#1e40af';
+                ctx.lineWidth = node.id === selectedNode ? 5 : 3;
+                ctx.stroke();
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 2;
+                ctx.fillText(node.label, node.x, node.y);
+                ctx.shadowColor = 'transparent';
+            });
+        }
+        
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            const clickedNode = nodes.find(n => Math.hypot(n.x - x, n.y - y) < NODE_RADIUS);
+            
+            if (mode === 'add-node' && !clickedNode) {
+                const id = `N${nodes.length + 1}`;
+                nodes.push({id, label: id, x, y});
+                drawGraph();
+            } else if (mode === 'add-edge' && clickedNode) {
+                if (!selectedNode) {
+                    selectedNode = clickedNode.id;
+                } else if (selectedNode !== clickedNode.id) {
+                    const capacity = prompt('Capacidade da via (veículos/hora ou unidades):', '100');
+                    const cap = parseInt(capacity);
+                    if (cap > 0 && !edges.find(e => e.from === selectedNode && e.to === clickedNode.id)) {
+                        edges.push({id: `E${edges.length+1}`, from: selectedNode, to: clickedNode.id, capacity: cap, flow: 0});
+                    }
+                    selectedNode = null;
+                }
+                drawGraph();
+            } else if (clickedNode) {
+                selectedNode = clickedNode.id;
+                drawGraph();
+            }
+        });
+        
+        let isDragging = false;
+        canvas.addEventListener('mousedown', (e) => {
+            if (mode !== 'move') return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+            const clicked = nodes.find(n => Math.hypot(n.x - x, n.y - y) < NODE_RADIUS);
+            if (clicked) {
+                draggedNode = clicked.id;
+                isDragging = true;
+            }
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging || !draggedNode) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.max(NODE_RADIUS, Math.min((e.clientX - rect.left) * (canvas.width / rect.width), canvas.width - NODE_RADIUS));
+            const y = Math.max(NODE_RADIUS, Math.min((e.clientY - rect.top) * (canvas.height / rect.height), canvas.height - NODE_RADIUS));
+            const node = nodes.find(n => n.id === draggedNode);
+            node.x = x;
+            node.y = y;
+            drawGraph();
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            draggedNode = null;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            draggedNode = null;
+        });
+        
+        function setMode(newMode) {
+            mode = newMode;
+            selectedNode = null;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`button[onclick="setMode('${newMode}')"]`).classList.add('active');
+            drawGraph();
+        }
+        
+        function setNodeType(type) {
+            if (!selectedNode) return alert('⚠️ Selecione um nó primeiro!');
+            if (type === 'source') sourceNode = selectedNode;
+            else if (type === 'target') targetNode = selectedNode;
+            selectedNode = null;
+            drawGraph();
+        }
+        
+        function removeSelectedNode() {
+            if (!selectedNode) return alert('⚠️ Selecione um nó primeiro!');
+            nodes = nodes.filter(n => n.id !== selectedNode);
+            edges = edges.filter(e => e.from !== selectedNode && e.to !== selectedNode);
+            if (sourceNode === selectedNode) sourceNode = null;
+            if (targetNode === selectedNode) targetNode = null;
+            selectedNode = null;
+            drawGraph();
+        }
+        
+        function removeSelectedEdge() {
+            if (!selectedNode) return alert('⚠️ Selecione um nó primeiro!');
+            let connected = edges.filter(e => e.from === selectedNode || e.to === selectedNode);
+            if (connected.length === 0) return alert('⚠️ Nenhuma via conectada a este nó!');
+            if (connected.length === 1) {
+                edges = edges.filter(e => e.id !== connected[0].id);
+            } else {
+                const choices = connected.map((e,i) => `${i+1}. ${e.from} → ${e.to} (capacidade: ${e.capacity})`).join('\n');
+                const choice = prompt(`Escolha a via a remover:\n${choices}`);
+                const idx = parseInt(choice) - 1;
+                if (idx >= 0 && idx < connected.length) {
+                    edges = edges.filter(e => e.id !== connected[idx].id);
+                }
+            }
+            drawGraph();
+        }
+        
+        function runFordFulkerson() {
+            if (algorithmState) {
+                alert('⚠️ Análise passo a passo em andamento. Resete primeiro!');
+                return;
+            }
+            if (!sourceNode || !targetNode) return alert('⚠️ Defina a origem e o destino da rede!');
+            let flow = 0;
+            augmentingPaths = [];
+            stepsLog = [];
+            let residual = edges.map(e => ({...e}));
+            
+            stepsLog.push('🚀 <strong>Iniciando análise de fluxo máximo</strong> - Algoritmo Ford-Fulkerson aplicado à rede de transporte.');
+            
+            function findPath(res) {
+                const visited = new Set();
+                const queue = [{node: sourceNode, path: [sourceNode]}];
+                visited.add(sourceNode);
+                
+                while (queue.length) {
+                    const {node, path} = queue.shift();
+                    if (node === targetNode) return path;
+                    
+                    res.forEach(e => {
+                        if (e.from === node && e.capacity - e.flow > 0 && !visited.has(e.to)) {
+                            visited.add(e.to);
+                            queue.push({node: e.to, path: [...path, e.to]});
+                        }
+                    });
+                    
+                    res.forEach(e => {
+                        if (e.to === node && e.flow > 0 && !visited.has(e.from)) {
+                            visited.add(e.from);
+                            queue.push({node: e.from, path: [...path, e.from]});
+                        }
+                    });
+                }
+                return null;
+            }
+            
+            let path;
+            let iteration = 1;
+            while ((path = findPath(residual)) !== null) {
+                stepsLog.push(`📍 <strong>Iteração ${iteration}:</strong> Rota encontrada: ${path.join(' → ')}. Esta é uma rota viável com capacidade disponível.`);
+                
+                let minCap = Infinity;
+                let edgeUpdates = [];
+                for (let i = 0; i < path.length - 1; i++) {
+                    const u = path[i], v = path[i+1];
+                    let e = residual.find(e => e.from === u && e.to === v);
+                    if (e) {
+                        const res = e.capacity - e.flow;
+                        minCap = Math.min(minCap, res);
+                        edgeUpdates.push(`Via ${u} → ${v}: capacidade disponível ${res} unidades`);
+                    } else {
+                        e = residual.find(e => e.from === v && e.to === u);
+                        const res = e.flow;
+                        minCap = Math.min(minCap, res);
+                        edgeUpdates.push(`Via reversa ${v} → ${u}: fluxo atual ${res} unidades`);
+                    }
+                }
+                
+                stepsLog.push(`⚡ <strong>Capacidade limitante:</strong> ${minCap} unidades. Este é o gargalo da rota encontrada.`);
+                stepsLog.push(`📊 Detalhes: ${edgeUpdates.join('; ')}`);
+                
+                for (let i = 0; i < path.length - 1; i++) {
+                    const u = path[i], v = path[i+1];
+                    let e = residual.find(e => e.from === u && e.to === v);
+                    if (e) {
+                        e.flow += minCap;
+                    } else {
+                        e = residual.find(e => e.from === v && e.to === u);
+                        e.flow -= minCap;
+                    }
+                }
+                
+                flow += minCap;
+                augmentingPaths.push({path, flow: minCap});
+                stepsLog.push(`✅ <strong>Fluxo atualizado:</strong> +${minCap} unidades. Total acumulado: ${flow} unidades.`);
+                iteration++;
+            }
+            
+            stepsLog.push('🎯 <strong>Análise concluída!</strong> Não há mais rotas viáveis. O fluxo máximo da rede foi determinado.');
+            
+            edges = residual;
+            maxFlow = flow;
+            calculateMinCut(residual);
+            stepsLog.push(`🔍 <strong>Corte mínimo calculado:</strong> Identifica o gargalo crítico da rede. A capacidade do corte é igual ao fluxo máximo (Teorema Max-Flow Min-Cut).`);
+            
+            updateResults();
+            drawGraph();
+        }
+        
+        function stepFordFulkerson() {
+            if (!sourceNode || !targetNode) return alert('⚠️ Defina a origem e o destino da rede!');
+            
+            if (!algorithmState || algorithmState.finished) {
+                algorithmState = {
+                    flow: 0,
+                    augmentingPaths: [],
+                    stepsLog: [],
+                    residual: edges.map(e => ({...e})),
+                    finished: false,
+                    iteration: 1
+                };
+                algorithmState.stepsLog.push('🚀 <strong>Modo iterativo iniciado.</strong> Execute passo a passo para acompanhar cada iteração do algoritmo.');
+            }
+            
+            if (algorithmState.finished) {
+                alert('✅ Análise já finalizada. Resete para recomeçar.');
+                return;
+            }
+            
+            function findPath(res) {
+                const visited = new Set();
+                const queue = [{node: sourceNode, path: [sourceNode]}];
+                visited.add(sourceNode);
+                
+                while (queue.length) {
+                    const {node, path} = queue.shift();
+                    if (node === targetNode) return path;
+                    
+                    res.forEach(e => {
+                        if (e.from === node && e.capacity - e.flow > 0 && !visited.has(e.to)) {
+                            visited.add(e.to);
+                            queue.push({node: e.to, path: [...path, e.to]});
+                        }
+                    });
+                    
+                    res.forEach(e => {
+                        if (e.to === node && e.flow > 0 && !visited.has(e.from)) {
+                            visited.add(e.from);
+                            queue.push({node: e.from, path: [...path, e.from]});
+                        }
+                    });
+                }
+                return null;
+            }
+            
+            const path = findPath(algorithmState.residual);
+            
+            if (path === null) {
+                algorithmState.finished = true;
+                calculateMinCut(algorithmState.residual);
+                algorithmState.stepsLog.push('🎯 <strong>Análise concluída!</strong> Não há mais rotas viáveis.');
+                algorithmState.stepsLog.push(`🔍 <strong>Corte mínimo calculado:</strong> Identifica o gargalo crítico da rede.`);
+                
+                edges = algorithmState.residual;
+                maxFlow = algorithmState.flow;
+                augmentingPaths = algorithmState.augmentingPaths;
+                minCut = algorithmState.minCut;
+                
+                updateResults();
+                drawGraph();
+                return;
+            }
+            
+            algorithmState.stepsLog.push(`📍 <strong>Iteração ${algorithmState.iteration}:</strong> Rota encontrada: ${path.join(' → ')}`);
+            
+            let minCap = Infinity;
+            let edgeUpdates = [];
+            for (let i = 0; i < path.length - 1; i++) {
+                const u = path[i], v = path[i+1];
+                let e = algorithmState.residual.find(e => e.from === u && e.to === v);
+                if (e) {
+                    const res = e.capacity - e.flow;
+                    minCap = Math.min(minCap, res);
+                    edgeUpdates.push(`Via ${u} → ${v}: ${res} unidades`);
+                } else {
+                    e = algorithmState.residual.find(e => e.from === v && e.to === u);
+                    const res = e.flow;
+                    minCap = Math.min(minCap, res);
+                    edgeUpdates.push(`Via reversa ${v} → ${u}: ${res} unidades`);
+                }
+            }
+            
+            algorithmState.stepsLog.push(`⚡ <strong>Capacidade limitante:</strong> ${minCap} unidades`);
+            algorithmState.stepsLog.push(`📊 ${edgeUpdates.join('; ')}`);
+            
+            for (let i = 0; i < path.length - 1; i++) {
+                const u = path[i], v = path[i+1];
+                let e = algorithmState.residual.find(e => e.from === u && e.to === v);
+                if (e) {
+                    e.flow += minCap;
+                } else {
+                    e = algorithmState.residual.find(e => e.from === v && e.to === u);
+                    e.flow -= minCap;
+                }
+            }
+            
+            algorithmState.flow += minCap;
+            algorithmState.augmentingPaths.push({path, flow: minCap});
+            algorithmState.stepsLog.push(`✅ <strong>Fluxo atualizado:</strong> +${minCap}. Total: ${algorithmState.flow} unidades`);
+            algorithmState.iteration++;
+            
+            edges = algorithmState.residual.map(e => ({...e}));
+            maxFlow = algorithmState.flow;
+            augmentingPaths = [...algorithmState.augmentingPaths];
+            stepsLog = [...algorithmState.stepsLog];
+            
+            updateResults();
+            drawGraph();
+        }
+        
+        function resetAlgorithm() {
+            maxFlow = 0;
+            augmentingPaths = [];
+            minCut = null;
+            stepsLog = [];
+            algorithmState = null;
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('steps').innerHTML = '';
+            edges = edges.map(e => ({...e, flow: 0}));
+            drawGraph();
+        }
+        
+        function calculateMinCut(residual) {
+            const visited = new Set();
+            const queue = [sourceNode];
+            visited.add(sourceNode);
+            
+            while (queue.length) {
+                const node = queue.shift();
+                residual.forEach(e => {
+                    if (e.from === node && e.capacity - e.flow > 0 && !visited.has(e.to)) {
+                        visited.add(e.to);
+                        queue.push(e.to);
+                    }
+                    if (e.to === node && e.flow > 0 && !visited.has(e.from)) {
+                        visited.add(e.from);
+                        queue.push(e.from);
+                    }
+                });
+            }
+            
+            const S = Array.from(visited);
+            const T = nodes.map(n => n.id).filter(id => !S.includes(id));
+            if (algorithmState) {
+                algorithmState.minCut = {S, T};
+            } else {
+                minCut = {S, T};
+            }
+        }
+        
+        function updateResults() {
+            const isStepMode = !!algorithmState;
+            const currentFlow = isStepMode ? algorithmState.flow : maxFlow;
+            const currentPaths = isStepMode ? algorithmState.augmentingPaths : augmentingPaths;
+            const currentMinCut = isStepMode ? algorithmState.minCut : minCut;
+            const currentSteps = isStepMode ? algorithmState.stepsLog : stepsLog;
+            
+            const results = document.getElementById('results');
+            const statusClass = isStepMode && !algorithmState.finished ? 'status-processing' : currentFlow > 0 ? 'status-complete' : 'status-ready';
+            const statusText = isStepMode && !algorithmState.finished ? 'Em Análise' : currentFlow > 0 ? 'Concluído' : 'Aguardando';
+            
+            results.innerHTML = `
+                <h3><span class="status-indicator ${statusClass}"></span>${statusText}</h3>
+                <p><strong>Fluxo Máximo Atual:</strong> ${currentFlow} unidades/hora</p>
+                ${currentPaths.length > 0 ? `
+                    <h4>Rotas Utilizadas (${currentPaths.length}):</h4>
+                    ${currentPaths.map((p, i) => `<p><strong>${i+1}.</strong> ${p.path.join(' → ')} <span style="color:#10b981">(+${p.flow} unidades)</span></p>`).join('')}
+                ` : ''}
+                ${currentMinCut ? `
+                    <h4>Corte Mínimo Identificado:</h4>
+                    <p><strong>Conjunto S (Origem):</strong> {${currentMinCut.S.join(', ')}}</p>
+                    <p><strong>Conjunto T (Destino):</strong> {${currentMinCut.T.join(', ')}}</p>
+                    <p style="color:#94a3b8; font-size:0.85rem;">O corte mínimo representa o gargalo da rede.</p>
+                ` : ''}
+            `;
+            
+            const stepsDiv = document.getElementById('steps');
+            stepsDiv.innerHTML = `
+                <h3>📋 Relatório da Análise</h3>
+                ${currentSteps.map(step => `<p>${step}</p>`).join('')}
+            `;
+        }
+        
+        function resetGraph() {
+            edges = edges.map(e => ({...e, flow: 0}));
+            maxFlow = 0;
+            augmentingPaths = [];
+            minCut = null;
+            stepsLog = [];
+            algorithmState = null;
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('steps').innerHTML = '';
+            drawGraph();
+        }
+        
+        function clearAll() {
+            nodes = [];
+            edges = [];
+            sourceNode = null;
+            targetNode = null;
+            selectedNode = null;
+            maxFlow = 0;
+            augmentingPaths = [];
+            minCut = null;
+            stepsLog = [];
+            algorithmState = null;
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('steps').innerHTML = '';
+            drawGraph();
+        }
+        
+        function loadExample(num) {
+            resetGraph();
+            clearAll();
+            
+            if (num === 1) {
+                nodes = [
+                    {id: 'A', label: 'A', x: 150, y: 300},
+                    {id: 'B', label: 'B', x: 350, y: 150},
+                    {id: 'C', label: 'C', x: 350, y: 450},
+                    {id: 'D', label: 'D', x: 600, y: 150},
+                    {id: 'E', label: 'E', x: 600, y: 450},
+                    {id: 'F', label: 'F', x: 850, y: 300}
+                ];
+                edges = [
+                    {id: 'e1', from: 'A', to: 'B', capacity: 1600, flow: 0},
+                    {id: 'e2', from: 'A', to: 'C', capacity: 1300, flow: 0},
+                    {id: 'e3', from: 'B', to: 'D', capacity: 1200, flow: 0},
+                    {id: 'e4', from: 'C', to: 'B', capacity: 400, flow: 0},
+                    {id: 'e5', from: 'C', to: 'E', capacity: 1400, flow: 0},
+                    {id: 'e6', from: 'D', to: 'C', capacity: 900, flow: 0},
+                    {id: 'e7', from: 'D', to: 'F', capacity: 2000, flow: 0},
+                    {id: 'e8', from: 'E', to: 'D', capacity: 700, flow: 0},
+                    {id: 'e9', from: 'E', to: 'F', capacity: 400, flow: 0}
+                ];
+                sourceNode = 'A';
+                targetNode = 'F';
+            } else if (num === 2) {
+                nodes = [
+                    {id: 'A', label: 'A', x: 200, y: 300},
+                    {id: 'B', label: 'B', x: 450, y: 200},
+                    {id: 'C', label: 'C', x: 450, y: 400},
+                    {id: 'D', label: 'D', x: 700, y: 300}
+                ];
+                edges = [
+                    {id: 'e1', from: 'A', to: 'B', capacity: 1000, flow: 0},
+                    {id: 'e2', from: 'A', to: 'C', capacity: 1000, flow: 0},
+                    {id: 'e3', from: 'B', to: 'D', capacity: 1000, flow: 0},
+                    {id: 'e4', from: 'C', to: 'D', capacity: 1000, flow: 0}
+                ];
+                sourceNode = 'A';
+                targetNode = 'D';
+            } else if (num === 3) {
+                nodes = [
+                    {id: 'A', label: 'A', x: 150, y: 350},
+                    {id: 'B', label: 'B', x: 350, y: 150},
+                    {id: 'C', label: 'C', x: 350, y: 550},
+                    {id: 'D', label: 'D', x: 650, y: 150},
+                    {id: 'E', label: 'E', x: 650, y: 550},
+                    {id: 'F', label: 'F', x: 950, y: 350}
+                ];
+                edges = [
+                    {id: 'e1', from: 'A', to: 'B', capacity: 5000, flow: 0},
+                    {id: 'e2', from: 'A', to: 'C', capacity: 4000, flow: 0},
+                    {id: 'e3', from: 'B', to: 'D', capacity: 6000, flow: 0},
+                    {id: 'e4', from: 'C', to: 'E', capacity: 6000, flow: 0},
+                    {id: 'e5', from: 'D', to: 'F', capacity: 3000, flow: 0},
+                    {id: 'e6', from: 'E', to: 'F', capacity: 5000, flow: 0},
+                    {id: 'e7', from: 'B', to: 'E', capacity: 7000, flow: 0}
+                ];
+                sourceNode = 'A';
+                targetNode = 'F';
+            } else if (num === 4) {
+                nodes = [
+                    {id: 'A', label: 'A', x: 200, y: 300},
+                    {id: 'B', label: 'B', x: 450, y: 150},
+                    {id: 'C', label: 'C', x: 450, y: 450},
+                    {id: 'D', label: 'D', x: 700, y: 300}
+                ];
+                edges = [
+                    {id: 'e1', from: 'A', to: 'B', capacity: 300, flow: 0},
+                    {id: 'e2', from: 'A', to: 'C', capacity: 300, flow: 0},
+                    {id: 'e3', from: 'B', to: 'D', capacity: 200, flow: 0},
+                    {id: 'e4', from: 'C', to: 'D', capacity: 200, flow: 0},
+                    {id: 'e5', from: 'B', to: 'C', capacity: 300, flow: 0}
+                ];
+                sourceNode = 'A';
+                targetNode = 'D';
+            }
+            drawGraph();
+        }
+        
+        // Inicializar com exemplo
+        loadExample(1);
+    </script>
+</body>
+</html>
